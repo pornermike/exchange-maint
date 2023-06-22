@@ -1,0 +1,28 @@
+Поочередных перевод серверов в режим обслуживания:
+
+Set-ServerComponentState srv-exch1 –Component HubTransport –State Draining –Requester Maintenance (отключаем транспорт)
+
+Redirect-Message -Server srv-exch1  -Target srv-exch2.rucontoso.com (переводим сообщения из очереди)
+
+Suspend-ClusterNode –Name srv-exch1 (ставим ноду на паузу)
+
+Set-MailboxServer srv-exch1  –DatabaseCopyActivationDisabledAndMoveNow $true (переводим активные копии)
+
+Set-MailboxServer srv-exch1  –DatabaseCopyAutoActivationPolicy Blocked (блокируем активацию баз на сервере)
+
+Get-MailboxDatabaseCopyStatus -Server srv-exch1  | Where {$_.Status -eq "Mounted"} (проверяем есть ли активные копии)
+
+Set-ServerComponentState srv-exch1 –Component ServerWideOffline –State InActive –Requester Maintenance  (переводим в режим обслуживания)
+
+
+Вывод серверов из режима обслуживания
+
+Set-ServerComponentState srv-exch1  –Component ServerWideOffline –State Active –Requester Maintenance (отключаем режим обслуживания)
+
+Resume-ClusterNode –Name srv-exch1  (снимаем с паузы ноду)
+
+Set-MailboxServer srv-exch1  –DatabaseCopyAutoActivationPolicy Unrestricted 
+
+Set-MailboxServer srv-exch1  –DatabaseCopyActivationDisabledAndMoveNow $false
+
+Set-ServerComponentState srv-exch1  –Component HubTransport –State Active –Requester Maintenance (запускаем сервис транспорта)
